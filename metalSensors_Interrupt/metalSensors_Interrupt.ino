@@ -27,10 +27,11 @@ void setup() {
   digitalWrite(belt_1, HIGH);
   digitalWrite(belt_2, HIGH);
   attachInterrupt(digitalPinToInterrupt(metalSensor), metalDetected, RISING); //Read when it goes from LOW to HIGH
-  attachInterrupt(digitalPinToInterrupt(sortSensor), componentDetected_1st, RISING); 
+  attachInterrupt(digitalPinToInterrupt(sortSensor), componentDetected_1st, HIGH);
 }
 
 void loop() {
+  Serial.println(digitalRead(sortSensor));
   currentTime = millis();
   if ( (currentTime - fp_latchedTime) > fp_interval) {
     flag_pass = false;
@@ -38,19 +39,18 @@ void loop() {
 
   if ((currentTime - componentDetect_time) > extendPeriod) {
     digitalWrite( sortSolenoid, LOW);
-//    Serial.println("retract");
   }
 }
 
 void metalDetected() {
   flag_pass = true;
   fp_latchedTime = currentTime;
-  Serial.println("Metal");
+  //  Serial.println("Metal");
 }
 
 void componentDetected_1st () {
   if (!flag_pass) {
-    Serial.println("IR");
+    //    Serial.println("Flagged and sensed component");
     digitalWrite(sortSolenoid, HIGH);
     componentDetect_time = currentTime;
     queueCounter++;
