@@ -38,6 +38,7 @@ void loop() {
 
   if ((currentTime - componentDetect_time) > extendPeriod) {
     digitalWrite( sortSolenoid, LOW);
+//    Serial.println("retract");
   }
 }
 
@@ -48,8 +49,8 @@ void metalDetected() {
 }
 
 void componentDetected_1st () {
-  Serial.println("IR");
   if (!flag_pass) {
+    Serial.println("IR");
     digitalWrite(sortSolenoid, HIGH);
     componentDetect_time = currentTime;
     queueCounter++;
