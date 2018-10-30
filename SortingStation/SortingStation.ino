@@ -1,5 +1,5 @@
 // 2, 3, 18, 19, 20, 21  = Interrupt Pin
-//Define states
+//Inputs
 int metalSensor = 2;
 int sortSensor = 3; //IR sensor
 int queueCounter = 0;
@@ -9,7 +9,9 @@ int belt_1 = 5;
 int belt_2 = 6;
 int sortSolenoid = 4;
 
-bool flag_pass;
+//boolean control and timing interval
+bool flag_pass = false;
+bool flag_counter = true;
 int fp_interval = 2500;
 int extendPeriod = 1000;
 
@@ -24,10 +26,11 @@ void setup() {
   pinMode(sortSolenoid, OUTPUT);
   pinMode(belt_1 , OUTPUT);
   pinMode(belt_2 , OUTPUT);
-  digitalWrite(belt_1, HIGH);
-  digitalWrite(belt_2, HIGH);
   attachInterrupt(digitalPinToInterrupt(metalSensor), metalDetected, RISING); //Read when it goes from LOW to HIGH
   attachInterrupt(digitalPinToInterrupt(sortSensor), componentDetected_1st, HIGH);
+
+  digitalWrite(belt_1, HIGH);
+  digitalWrite(belt_2, HIGH);
 }
 
 void loop() {
@@ -39,6 +42,7 @@ void loop() {
 
   if ((currentTime - componentDetect_time) > extendPeriod) {
     digitalWrite( sortSolenoid, LOW);
+    flag_counter = true;
   }
 }
 
@@ -49,11 +53,14 @@ void metalDetected() {
 }
 
 void componentDetected_1st () {
-  if (!flag_pass) {
-    //    Serial.println("Flagged and sensed component");
+  if (!flag_pass && queueCounter <=5) {
+    //    Serial.println("not flagged and sensed component");
     digitalWrite(sortSolenoid, HIGH);
     componentDetect_time = currentTime;
-    queueCounter++;
+    if (flag_counter) {
+      queueCounter++;
+      flag_counter = false;
+    }
   }
 }
 
