@@ -1,9 +1,8 @@
- // 2, 3, 18, 19, 20, 21  = Interrupt Pin
+// 2, 3, 18, 19, 20, 21  = Interrupt Pin
 //Inputs
 int metalSensor = 2;
 int sortSensor = 3; //IR sensor
 int hopperSensor = 8;
-int queueCounter;
 
 //OUTPUTS
 int belt_1 = 5;
@@ -18,6 +17,7 @@ bool flag_rotate = true;
 int fp_interval = 2500;
 int extendPeriod = 500;
 int rotationDelay = 2200;
+int queueCounter;
 
 unsigned long currentTime;
 unsigned long fp_latchedTime = 0;
@@ -32,24 +32,19 @@ void setup() {
   pinMode(rotarySolenoid, OUTPUT);
   pinMode(belt_1 , OUTPUT);
   pinMode(belt_2 , OUTPUT);
-  attachInterrupt(digitalPinToInterrupt(metalSensor), metalDetected, RISING); //Read when it goes from LOW to HIGH
-  attachInterrupt(digitalPinToInterrupt(sortSensor), componentDetected_1st, RISING);
-
+  attachInterrupt(digitalPinToInterrupt(metalSensor), metalDetected, RISING);
+  attachInterrupt(digitalPinToInterrupt(sortSensor), componentDetected_1st, HIGH);
   digitalWrite(belt_1, HIGH);
   digitalWrite(belt_2, HIGH);
   queueCounter  = 0;
 }
 
 void loop() {
-  //  Serial.println(digitalRead(sortSensor));
   Serial.println (queueCounter);
-
   currentTime = millis();
   timingControl();
-
   int hopperState = digitalRead(hopperSensor);
   if (hopperState == LOW && queueCounter > 0 && flag_rotate) {
-   
     digitalWrite(rotarySolenoid, HIGH);
     queueCounter--;
     delay(100);
