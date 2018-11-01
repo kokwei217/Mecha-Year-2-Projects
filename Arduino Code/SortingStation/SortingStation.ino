@@ -2,26 +2,29 @@
 //Inputs
 int metalSensor = 2;
 int sortSensor = 3; //IR sensor
-int hopperSensor = 8;
+int hopperSensor = 4;
+int hopperState = LOW;
 
 //OUTPUTS
 int belt_1 = 5;
 int belt_2 = 6;
-int sortSolenoid = 4;
+int sortSolenoid = 8;
 int rotarySolenoid = 7;
 
 //boolean control and timing interval
 bool flag_pass = false;
-bool flag_counter = true;
+bool flag_counter = true; //Counter++
+bool flag_counterN = false; //Counter--
 bool flag_rotate = true;
-int fp_interval = 2500;
-int extendPeriod = 500;
+int fp_interval = 2500; //flag_pass interval
+int extendPeriod = 300; //output extension time
 int rotationDelay = 2200;
 int queueCounter;
 
 unsigned long currentTime;
 unsigned long fp_latchedTime = 0;
-unsigned long componentDetect_time = 0;
+unsigned long t_out1 = 0;
+unsigned long t_out2 = 0;
 
 void setup() {
   Serial.begin(9600);
@@ -43,24 +46,25 @@ void loop() {
   Serial.println (queueCounter);
   currentTime = millis();
   timingControl();
-  int hopperState = digitalRead(hopperSensor);
+  hopperState = digitalRead(hopperSensor);
   if (hopperState == LOW && queueCounter > 0 && flag_rotate) {
     digitalWrite(rotarySolenoid, HIGH);
-    queueCounter--;
-    delay(100);
-    digitalWrite(rotarySolenoid, LOW);
+    flag_counterN = true;
+    t_out2 = currentTime;
   }
 }
 
 void metalDetected() {
+//  Serial.println("metal");
   flag_pass = true;
   fp_latchedTime = currentTime;
 }
 
 void componentDetected_1st () {
+//  Serial.println("push");
   if (!flag_pass && queueCounter < 5) {
     digitalWrite(sortSolenoid, HIGH);
-    componentDetect_time = currentTime;
+    t_out1 = currentTime;
     flag_rotate = false;
     if (flag_counter) {
       queueCounter++;
@@ -76,13 +80,19 @@ void timingControl() {
   }
 
   //Control extension of solenoid, retract after extendPeriod
-  if ((currentTime - componentDetect_time) > extendPeriod) {
+  if ((currentTime - t_out1) > extendPeriod) {
     digitalWrite( sortSolenoid, LOW);
     flag_counter = true;
   }
 
-  if ((currentTime - componentDetect_time) > rotationDelay ) {
+  if ((currentTime - t_out1) > rotationDelay ) {
     flag_rotate = true;
+  }
+
+  if ((currentTime - t_out2) > extendPeriod && flag_counterN == true) {
+    digitalWrite( rotarySolenoid, LOW);
+    queueCounter--;
+    flag_counterN = false;
   }
 }
 
