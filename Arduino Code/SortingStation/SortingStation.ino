@@ -5,7 +5,7 @@ int sortSensor = 3;
 int hopperSensor = 4;
 int in5 = 18;
 int in4 = 53;
-int in3 = 11;
+int in3 = 21;
 int hopperState = LOW;
 
 //OUTPUTS
@@ -45,7 +45,7 @@ void setup() {
   pinMode(hopperSensor, INPUT);
   pinMode(in5 , INPUT_PULLUP);
   pinMode(in4, INPUT);
-  pinMode(in3 , INPUT);
+  pinMode(in3 , INPUT_PULLUP);
   pinMode(rejectSolenoid, OUTPUT);
   pinMode(sortSolenoid, OUTPUT);
   pinMode(rotarySolenoid, OUTPUT);
@@ -54,6 +54,7 @@ void setup() {
   attachInterrupt(digitalPinToInterrupt(metalSensor), metalDetected, RISING);
   attachInterrupt(digitalPinToInterrupt(sortSensor), componentDetected_1st, RISING);
   attachInterrupt(digitalPinToInterrupt(in5), rejectionCheck, RISING);
+  attachInterrupt(digitalPinToInterrupt(in3), assemblyCheck, RISING);
   digitalWrite(belt_1, HIGH);
   digitalWrite(belt_2, HIGH);
   queueCounter  = 0;
@@ -75,11 +76,10 @@ void loop() {
   Serial.println(flag_reject);
 
   //detect assembled
-  if (digitalRead(in3) == LOW)  {
-    flag_pass = true;
-    //    flag_reject = false;
-    t_ip3 = currentTime;
-  }
+//  if (digitalRead(in3) == LOW)  {
+//    flag_pass = true;
+//    t_ip3 = currentTime;
+//  }
 
   //detect Others
   if (digitalRead(in4) == LOW && !flag_pass) {
@@ -115,6 +115,11 @@ void rejectionCheck () {
   }
 }
 
+void assemblyCheck() {
+    flag_pass = true;
+    t_ip3 = currentTime;
+}
+
 void timingControl() {
   //Control passing of metal, unflag after the interval;
   if ( (currentTime - fp_latchedTime) > fm_interval) {
@@ -147,7 +152,7 @@ void timingControl() {
     flag_reject = true;
   }
 
-  if ((currentTime - t_ip3) > 1500) {
+  if ((currentTime - t_ip3) > 1700) {
     flag_pass = false;
   }
 }
