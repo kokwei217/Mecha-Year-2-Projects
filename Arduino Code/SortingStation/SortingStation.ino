@@ -16,21 +16,20 @@ int rotarySolenoid = 7;
 int rejectSolenoid = 9;
 
 //boolean control and timing interval
-bool flag_metal = false;
-bool flag_counter = true; //Counter++
-bool flag_counterN = false; //Counter--
+bool isMetal = false;
+bool isAssembly = false;
+bool isReject = false;
+bool flag_counterIn = true; //Counter++
+bool flag_counterOut = false; //Counter--
 bool flag_rotate = true;
 bool flag_check = false;
-bool flag_reject = false;
-bool flag_pass = true;
-int fm_interval = 2500; //flag_metal interval
+int fm_interval = 2500; // metal detected, sort sensor sleep interval
 int extendPeriod = 300; //output extension time
 int rotationDelay = 1100;
 int queueCounter;
 
 unsigned long currentTime;
-unsigned long fp_latchedTime = 0;
-unsigned long passTime = 0; //time when assembled product pass through ip 5
+unsigned long metal_latchedTime = 0;
 unsigned long t_out1 = 0;
 unsigned long t_out2 = 0;
 unsigned long t_out3 = 0;
@@ -67,22 +66,16 @@ void loop() {
   hopperState = digitalRead(hopperSensor);
   if (hopperState == LOW && queueCounter > 0 && flag_rotate) {
     digitalWrite(rotarySolenoid, HIGH);
-    flag_counterN = true;
+    flag_counterOut = true;
     t_out2 = currentTime;
   }
 
   //Xing Yik's Part
-  Serial.print(flag_pass);
-  Serial.println(flag_reject);
-
-  //detect assembled
-//  if (digitalRead(in3) == LOW)  {
-//    flag_pass = true;
-//    t_ip3 = currentTime;
-//  }
+  Serial.print(isAssembly);
+  Serial.println(isReject);
 
   //detect Others
-  if (digitalRead(in4) == LOW && !flag_pass) {
+  if (digitalRead(in4) == LOW && !isAssembly) {
     Serial.println("REJECT");
     flag_check = true;
     t_ip4 = currentTime;
@@ -91,69 +84,69 @@ void loop() {
 
 
 void metalDetected() {
-  flag_metal = true;
-  fp_latchedTime = currentTime;
+  isMetal = true;
+  metal_latchedTime = currentTime;
 }
 
 void componentDetected_1st () {
-  if (!flag_metal && queueCounter < 5) {
+  if (!isMetal && queueCounter < 5) {
     digitalWrite(sortSolenoid, HIGH);
     t_out1 = currentTime;
     flag_rotate = false;
-    if (flag_counter) {
+    if (flag_counterIn) {
       queueCounter++;
-      flag_counter = false;
+      flag_counterIn = false;
     }
   }
 }
 
 void rejectionCheck () {
-  if (flag_reject ) {
+  if (isReject ) {
     digitalWrite(rejectSolenoid, HIGH);
     t_out3 = currentTime;
-    flag_reject = false;
+    isReject = false;
   }
 }
 
 void assemblyCheck() {
-    flag_pass = true;
-    t_ip3 = currentTime;
+  isAssembly = true;
+  t_ip3 = currentTime;
 }
 
 void timingControl() {
   //Control passing of metal, unflag after the interval;
-  if ( (currentTime - fp_latchedTime) > fm_interval) {
-    flag_metal = false;
+  if ( (currentTime - metal_latchedTime) > fm_interval) {
+    isMetal = false;
   }
 
   //Control extension of solenoid, retract after extendPeriod
   if ((currentTime - t_out1) > extendPeriod) {
     digitalWrite( sortSolenoid, LOW);
-    flag_counter = true;
+    flag_counterIn = true;
   }
 
   if ((currentTime - t_out1) > rotationDelay ) {
     flag_rotate = true;
   }
 
-  if ((currentTime - t_out2) > extendPeriod && flag_counterN == true) {
+  if ((currentTime - t_out2) > extendPeriod && flag_counterOut == true) {
     digitalWrite( rotarySolenoid, LOW);
     queueCounter--;
-    flag_counterN = false;
+    flag_counterOut = false;
   }
 
   if (currentTime - t_out3 > extendPeriod) {
     digitalWrite(rejectSolenoid, LOW);
   }
 
-  //flag reject afteer 1.8sec
+  //flag reject afteer 1.8sec of sensing "reject"
   if ((currentTime - t_ip4) > 1800 && flag_check) {
     flag_check = false;
-    flag_reject = true;
+    isReject = true;
   }
 
   if ((currentTime - t_ip3) > 1700) {
-    flag_pass = false;
+    isAssembly = false;
   }
 }
 
