@@ -1,19 +1,19 @@
 // 2, 3, 18, 19, 20, 21  = Interrupt Pin
 //Inputs
-int metalSensor = 2;
-int sortSensor = 3;
-int hopperSensor = 4;
-int in5 = 18;
-int in4 = 53;
-int in3 = 21;
+const int metalSensor = 2;
+const int sortSensor = 3;
+const int hopperSensor = 4;
+const int in5 = 18;
+const int in4 = 53;
+const int in3 = 21;
 int hopperState = LOW;
 
 //OUTPUTS
-int belt_1 = 5;
-int belt_2 = 6;
-int sortSolenoid = 8;
-int rotarySolenoid = 7;
-int rejectSolenoid = 9;
+const int belt_1 = 5;
+const int belt_2 = 6;
+const int sortSolenoid = 8;
+const int rotarySolenoid = 7;
+const int rejectSolenoid = 9;
 
 //boolean control and timing interval
 bool isMetal = false;
@@ -23,19 +23,17 @@ bool flag_counterIn = true; //Counter++
 bool flag_counterOut = false; //Counter--
 bool flag_rotate = true;
 bool flag_check = false;
-int fm_interval = 2500; // metal detected, sort sensor sleep interval
-int extendPeriod = 300; //output extension time
-int rotationDelay = 1100;
+const int fm_interval = 2500; // metal detected, sort sensor sleep interval
+const int extendPeriod = 300; //output extension time
+const int rotationDelay = 1100;
 int queueCounter;
 
 unsigned long currentTime;
 unsigned long metal_latchedTime = 0;
-unsigned long t_out1 = 0;
-unsigned long t_out2 = 0;
-unsigned long t_out3 = 0;
-unsigned long t_ip4 = 0;
-unsigned long t_ip3 = 0;
+unsigned long t_out1, t_out2, t_out3;
+unsigned long t_ip4, t_ip3;
 
+t_out1 = t_out2 = t_out3 = t_ip4 = t_ip3 0;
 
 void setup() {
   Serial.begin(9600);
