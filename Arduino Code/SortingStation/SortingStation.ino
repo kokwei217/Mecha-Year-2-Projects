@@ -1,4 +1,4 @@
-// 2, 3, 18, 19, 20, 21  = Interrupt Pin
+// D0, D1, IN0, IN1, SDA, SCL  = Interrupt Pin
 //Inputs
 const int metalSensor = 2;
 const int sortSensor = 3;
