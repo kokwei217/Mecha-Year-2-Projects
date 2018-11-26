@@ -33,7 +33,6 @@ unsigned long metal_latchedTime = 0;
 unsigned long t_out1, t_out2, t_out3;
 unsigned long t_ip4, t_ip3;
 
-t_out1 = t_out2 = t_out3 = t_ip4 = t_ip3 0;
 
 void setup() {
   Serial.begin(9600);
@@ -55,6 +54,7 @@ void setup() {
   digitalWrite(belt_1, HIGH);
   digitalWrite(belt_2, HIGH);
   queueCounter  = 0;
+  t_out1 = t_out2 = t_out3 = t_ip4 = t_ip3 0;
 }
 
 void loop() {
