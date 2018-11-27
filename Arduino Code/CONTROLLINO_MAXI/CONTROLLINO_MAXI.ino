@@ -1,18 +1,20 @@
 #include <Controllino.h>
 
 #define IP1_SLEEP_TIME 2500
-#define IP4_SLEEP_TIME 1700
+#define IP4_SLEEP_TIME 1800
 #define EXTEND_TIME 300
 #define ROTATION_DELAY 1100
 #define FLAG_REJECT_DELAY 1800
 
 //Inputs
 const int metalSensor = CONTROLLINO_IN0;
-const int sortSensor = CONTROLLINO_A0; //first ir sensor
-const int hopperSensor = CONTROLLINO_A1;
+const int sortSensor = CONTROLLINO_A1; //first ir sensor
+const int hopperSensor = CONTROLLINO_A2;
 const int ip3 = CONTROLLINO_IN1; // assembly detection
 const int ip4 = CONTROLLINO_A4; // ir sensor 2nd
 const int ip5 = CONTROLLINO_A5; //reject detection
+const int ip6 = CONTROLLINO_A6;
+const int ip7 = CONTROLLINO_A7;
 
 //OUTPUTS
 const int belt_1 = CONTROLLINO_D2;
@@ -36,6 +38,7 @@ unsigned long t_out1, t_out2, t_out3;
 unsigned long t_ip3, t_ip4 ;
 int queueCounter = 0;
 
+char c;
 
 void setup() {
   // put your setup code here, to run once:
@@ -45,7 +48,9 @@ void setup() {
   pinMode(hopperSensor, INPUT);
   pinMode(ip3 , INPUT_PULLUP);
   pinMode(ip4, INPUT);
-  pinMode(ip5 , INPUT);
+  pinMode(ip5, INPUT);
+  pinMode(ip6, INPUT);
+  pinMode(ip7, INPUT);
   pinMode(rejectSolenoid, OUTPUT);
   pinMode(sortSolenoid, OUTPUT);
   pinMode(rotarySolenoid, OUTPUT);
@@ -53,15 +58,36 @@ void setup() {
   pinMode(belt_2 , OUTPUT);
   attachInterrupt(digitalPinToInterrupt(metalSensor), metalDetected, RISING);
   attachInterrupt(digitalPinToInterrupt(ip3), assemblyDetected, RISING);
-  digitalWrite(belt_1, HIGH);
-  digitalWrite(belt_2, HIGH);
   t_out1 = t_out2 = t_out3 = t_ip3 = t_ip4 = 0;
 }
 
 void loop() {
-  Serial.println (queueCounter);
+  //  Serial.println (queueCounter);
+  //  Serial.println(isReject);
   currentTime = millis();
   timingControl();
+
+  if (Serial.available() > 0) {
+    c = Serial.read();
+    if (c == 'a') {
+      digitalWrite(belt_1 , HIGH);
+      digitalWrite(belt_2, HIGH);
+    }
+    else {
+      digitalWrite(belt_1 , LOW);
+      digitalWrite(belt_2 , LOW);
+    }
+  }
+
+  if (digitalRead(ip6) == HIGH) {
+    digitalWrite(belt_1 , HIGH);
+    digitalWrite(belt_2, HIGH);
+  }
+
+  if (digitalRead(ip7) == LOW) {
+    digitalWrite(belt_1 , LOW);
+    digitalWrite(belt_2 , LOW);
+  }
 
   if (digitalRead(sortSensor) == HIGH && !isMetal && queueCounter < 5)
     pushRing();
@@ -74,7 +100,7 @@ void loop() {
 
   //detection of non-assembled products then prepare to flag it as a "reject"
   if (digitalRead(ip4) == LOW && !isAssembly) {
-    Serial.println("REJECT");
+    //    Serial.println("REJECT");
     flag_check = true; // isReject trigger method , need this so it only triggers once
     t_ip4 = currentTime;
   }
@@ -102,6 +128,7 @@ void pushRing() {
 }
 
 void assemblyDetected() {
+  Serial.println("assembly");
   isAssembly = true;
   t_ip3 = currentTime;
 }
